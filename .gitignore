@@ -1,0 +1,13 @@
+donut_test/outputs/
+donut_test/test_images/
+donut_test/best_yolov8s.pt
+donut_train/dehado_cropped_dataset/
+donut_train/DEHADO-AI_TRAINING_DATASET/
+donut_train/DEHADO-AI_TRAINING_DATASET_COMPLETE/
+donut_train/DEHADO-AI_TRAINING_DATASET_PHASE_II/
+donut_train/donut_best_checkpoint.pt
+donut_train/donut_checkpoint.pt
+donut_train/runs\donut_experiment/*
+submission/
+submission/data
+submission/model
