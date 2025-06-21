@@ -8,6 +8,7 @@ donut_train/DEHADO-AI_TRAINING_DATASET_PHASE_II/
 donut_train/donut_best_checkpoint.pt
 donut_train/donut_checkpoint.pt
 donut_train/runs\donut_experiment/*
-submission/
-submission/data
-submission/model
+Pre-Par-e_DeHaDo-AI_Challenge/
+Pre-Par-e_DeHaDo-AI_Challenge/data
+Pre-Par-e_DeHaDo-AI_Challenge/model
+Pre-Par-e_DeHaDo-AI_Challenge.zip

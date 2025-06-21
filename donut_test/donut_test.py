@@ -29,7 +29,7 @@ torch.manual_seed(SEED)
 random.seed(SEED)
 
 # -------------------------------------------------------------------
-# DATASET & HELPERS (inlined)
+# DATASET & HELPERS
 # -------------------------------------------------------------------
 class DonutDataset(Dataset):
     def __init__(self, images_dir, labels_dir, processor, max_length=MAX_LENGTH):
@@ -76,11 +76,11 @@ def compute_field_and_document_accuracy(preds, gts, keys):
     total_fields   = len(gts)
     field_acc = correct_fields / total_fields if total_fields > 0 else 0.0
 
-    # document‐level, **fixed grouping**
+    # document‐level grouping
     doc_groups = {}
     for key, p, g in zip(keys, preds, gts):
         parts  = key.split('_')
-        doc_id = '_'.join(parts[:2])            # ← take only MIT_1, MIT_34, etc.
+        doc_id = '_'.join(parts[:2])
         doc_groups.setdefault(doc_id, []).append((p.strip(), g.strip()))
 
     correct_docs = sum(1 for pairs in doc_groups.values() if all(p == g for p, g in pairs))
@@ -88,6 +88,27 @@ def compute_field_and_document_accuracy(preds, gts, keys):
     doc_acc = correct_docs / total_docs if total_docs > 0 else 0.0
 
     return field_acc, doc_acc
+
+def compute_token_level_metrics(preds, gts):
+    """
+    Token‐level precision, recall, and F1 across all fields.
+    """
+    total_tp = total_fp = total_fn = 0
+    for p, g in zip(preds, gts):
+        tokens_p = p.strip().split()
+        tokens_g = g.strip().split()
+        # count true positives as overlap
+        tp = len(set(tokens_p) & set(tokens_g))
+        fp = len(tokens_p) - tp
+        fn = len(tokens_g) - tp
+        total_tp += tp
+        total_fp += fp
+        total_fn += fn
+
+    precision = total_tp / (total_tp + total_fp) if (total_tp + total_fp) > 0 else 0.0
+    recall    = total_tp / (total_tp + total_fn) if (total_tp + total_fn) > 0 else 0.0
+    f1        = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0.0
+    return precision, recall, f1
 
 # -------------------------------------------------------------------
 # LOAD PROCESSOR & MODEL
@@ -151,14 +172,19 @@ for pixel_values, _, texts, keys, image_paths in tqdm(loader, desc="Batches"):
 cer_pct       = compute_cer(all_preds, all_texts) * 100
 wer_pct       = wer(" ".join(all_texts), " ".join(all_preds)) * 100
 field_acc_frac, doc_acc_frac = compute_field_and_document_accuracy(all_preds, all_texts, all_keys)
-field_acc_pct = field_acc_frac * 100
+accuracy_pct  = field_acc_frac * 100
 doc_acc_pct   = doc_acc_frac * 100
+
+precision, recall, f1 = compute_token_level_metrics(all_preds, all_texts)
+precision_pct = precision * 100
+recall_pct    = recall * 100
+f1_pct        = f1 * 100
 
 total_fields   = len(all_texts)
 correct_fields = int(field_acc_frac * total_fields)
 wrong_fields   = total_fields - correct_fields
 
-# Re-compute document grouping *with the same logic* to get counts
+# Document‐level counts
 doc_groups = {}
 for key, p, g in zip(all_keys, all_preds, all_texts):
     parts  = key.split('_')
@@ -173,7 +199,7 @@ wrong_docs   = total_docs - correct_docs
 final_score = (
     0.35 * (100 - wer_pct) +
     0.35 * (100 - cer_pct) +
-    0.15 * field_acc_pct +
+    0.15 * accuracy_pct +
     0.15 * doc_acc_pct
 )
 
@@ -184,11 +210,14 @@ mismatch_idxs = [i for i, (p, g) in enumerate(zip(all_preds, all_texts)) if p.st
 # -------------------------------------------------------------------
 print("\n" + "="*60)
 print("TEST SET PERFORMANCE")
-print(f"  CER:                {cer_pct:.2f}%")
-print(f"  WER:                {wer_pct:.2f}%")
-print(f"  Field Acc:          {field_acc_pct:.2f}%  ({correct_fields}/{total_fields} correct, {wrong_fields} wrong)")
-print(f"  Document Acc:       {doc_acc_pct:.2f}%  ({correct_docs}/{total_docs} correct, {wrong_docs} wrong)")
-print(f"  Final Score:        {final_score:.2f}")
+print(f"  CER:                 {cer_pct:.2f}%")
+print(f"  WER:                 {wer_pct:.2f}%")
+print(f"  Accuracy:            {accuracy_pct:.2f}%  ({correct_fields}/{total_fields} fields correct)")
+print(f"  Token Precision:     {precision_pct:.2f}%")
+print(f"  Token Recall:        {recall_pct:.2f}%")
+print(f"  Token F1 Score:      {f1_pct:.2f}%")
+print(f"  Document Acc:        {doc_acc_pct:.2f}%  ({correct_docs}/{total_docs} docs correct)")
+print(f"  Final Score:         {final_score:.2f}")
 print("="*60)
 
 # -------------------------------------------------------------------
