@@ -212,7 +212,7 @@ print("\n" + "="*60)
 print("TEST SET PERFORMANCE")
 print(f"  CER:                 {cer_pct:.2f}%")
 print(f"  WER:                 {wer_pct:.2f}%")
-print(f"  Accuracy:            {accuracy_pct:.2f}%  ({correct_fields}/{total_fields} fields correct)")
+print(f"  Field Accuracy:      {accuracy_pct:.2f}%  ({correct_fields}/{total_fields} fields correct)")
 print(f"  Token Precision:     {precision_pct:.2f}%")
 print(f"  Token Recall:        {recall_pct:.2f}%")
 print(f"  Token F1 Score:      {f1_pct:.2f}%")
@@ -220,22 +220,5 @@ print(f"  Document Acc:        {doc_acc_pct:.2f}%  ({correct_docs}/{total_docs} 
 print(f"  Final Score:         {final_score:.2f}")
 print("="*60)
 
-# -------------------------------------------------------------------
-# STEP THROUGH MISMATCHES
-# -------------------------------------------------------------------
-print(f"\nTotal mismatches: {len(mismatch_idxs)}/{total_fields} fields.")
-print("Press Enter to open each image+label; Ctrl+C to quit early.\n")
-
-for idx in mismatch_idxs:
-    img_path   = all_image_paths[idx]
-    label_path = os.path.join(LABELS_DIR, f"{all_keys[idx]}.txt")
-
-    print(f"[{idx}] Key={all_keys[idx]}")
-    print(f"  GT:   {all_texts[idx]}")
-    print(f"  Pred: {all_preds[idx]}")
-    print(f"Opening:\n    {img_path}\n    {label_path}")
-    os.startfile(img_path)
-    os.startfile(label_path)
-    input("→ Press Enter to continue…")
 
 print("\nAll done!")

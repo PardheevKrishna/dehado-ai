@@ -84,12 +84,6 @@ python donut_train/train.py
 ### 3. Inference & Testing
 
 ```powershell
-python donut_test/donut_singletest.py 
-```
-
-### 4. Prepare Submission
-
-```powershell
-python submission/src/generate_submission.py 
+python donut_test/donut_test.py 
 ```
 
